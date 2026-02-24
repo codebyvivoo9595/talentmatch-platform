@@ -15,6 +15,8 @@ import { useState } from "react";
 import AnalyzeModal from "../components/analyze/AnalyzeModal";
 import { useNavigate } from "react-router-dom";
 import { fadeUp } from "../animations/motionVariants";
+import PrimaryButton from "../components/common/PrimaryButton";
+
 
 const LandingPage = () => {
   const [openAnalyze, setOpenAnalyze] = useState(false);
@@ -49,34 +51,6 @@ const LandingPage = () => {
         />
 
         {/* Hero Content */}
-        {/* <Box sx={{ position: "relative", zIndex: 1, px: 2 }}>
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Typography variant="h2" fontWeight="bold" gutterBottom>
-              Match Your Resume with the Right Job
-            </Typography>
-
-            <Typography variant="h6" sx={{ mb: 5, maxWidth: 700, mx: "auto" }}>
-              AI-powered resume & job description matching with actionable
-              insights to boost your chances.
-            </Typography>
-
-            <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                variant="contained"
-                size="large"
-                sx={{ px: 5, py: 1.5, fontSize: "1rem" }}
-                onClick={() => setOpenAnalyze(true)}
-              >
-                Get Started
-              </Button>
-            </motion.div>
-          </motion.div>
-        </Box> */}
-
         <Box sx={{ position: "relative", zIndex: 1, px: 2 }}>
           {/* Hero Heading */}
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
@@ -107,14 +81,14 @@ const LandingPage = () => {
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Button
+            <PrimaryButton 
               variant="contained"
               size="large"
               sx={{ px: 5, py: 1.5, fontSize: "1rem" }}
               onClick={() => setOpenAnalyze(true)}
             >
               Get Started
-            </Button>
+            </PrimaryButton >
           </motion.div>
         </Box>
       </Box>

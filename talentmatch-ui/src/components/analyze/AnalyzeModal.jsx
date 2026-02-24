@@ -13,6 +13,8 @@ import { useState } from "react";
 import ResumeUploadStep from "./ResumeUploadStep";
 import JobDescriptionStep from "./JobDescriptionStep";
 import ReviewAnalyzeStep from "./ReviewAnalyzeStep";
+import PrimaryButton from "../common/PrimaryButton";
+
 
 
 const steps = ["Upload Resume", "Add Job Description", "Review & Analyze"];
@@ -90,11 +92,7 @@ const AnalyzeModal = ({ open, onClose, onComplete }) => {
             Back
           </Button>
 
-          {/* <Button variant="contained" onClick={handleNext}>
-            {activeStep === steps.length - 1 ? "Analyze" : "Next"}
-          </Button> */}
-
-          <Button
+          <Button 
             variant="contained"
             onClick={handleNext}
             disabled={
@@ -103,7 +101,7 @@ const AnalyzeModal = ({ open, onClose, onComplete }) => {
             }
           >
             {activeStep === steps.length - 1 ? "Analyze" : "Next"}
-          </Button>
+          </Button >
         </Box>
       </DialogContent>
     </Dialog>
