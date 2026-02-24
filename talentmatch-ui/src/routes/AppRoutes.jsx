@@ -1,14 +1,16 @@
 import { Routes, Route } from "react-router-dom";
 import LandingPage from "../pages/LandingPage";
+import DashboardPage from "../pages/DashboardPage";
 import MainLayout from "../layouts/MainLayout";
 
 const AppRoutes = () => {
   return (
-    <MainLayout>
-      <Routes>
+    <Routes>
+      <Route element={<MainLayout />}>
         <Route path="/" element={<LandingPage />} />
-      </Routes>
-    </MainLayout>
+        <Route path="/dashboard" element={<DashboardPage />} />
+      </Route>
+    </Routes>
   );
 };
 

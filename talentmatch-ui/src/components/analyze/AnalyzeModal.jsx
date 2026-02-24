@@ -14,6 +14,7 @@ import ResumeUploadStep from "./ResumeUploadStep";
 import JobDescriptionStep from "./JobDescriptionStep";
 import ReviewAnalyzeStep from "./ReviewAnalyzeStep";
 
+
 const steps = ["Upload Resume", "Add Job Description", "Review & Analyze"];
 
 const AnalyzeModal = ({ open, onClose, onComplete }) => {

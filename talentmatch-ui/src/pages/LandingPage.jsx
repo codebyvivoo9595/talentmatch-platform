@@ -13,9 +13,12 @@ import InsightsIcon from "@mui/icons-material/Insights";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import AnalyzeModal from "../components/analyze/AnalyzeModal";
+import { useNavigate } from "react-router-dom";
+import { fadeUp } from "../animations/motionVariants";
 
 const LandingPage = () => {
   const [openAnalyze, setOpenAnalyze] = useState(false);
+  const navigate = useNavigate();
   return (
     <>
       {/* ================= HERO SECTION ================= */}
@@ -46,7 +49,7 @@ const LandingPage = () => {
         />
 
         {/* Hero Content */}
-        <Box sx={{ position: "relative", zIndex: 1, px: 2 }}>
+        {/* <Box sx={{ position: "relative", zIndex: 1, px: 2 }}>
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -71,6 +74,47 @@ const LandingPage = () => {
                 Get Started
               </Button>
             </motion.div>
+          </motion.div>
+        </Box> */}
+
+        <Box sx={{ position: "relative", zIndex: 1, px: 2 }}>
+          {/* Hero Heading */}
+          <motion.div variants={fadeUp} initial="hidden" animate="visible">
+            <Typography variant="h2" fontWeight="bold" gutterBottom>
+              Match Your Resume with the Right Job
+            </Typography>
+          </motion.div>
+
+          {/* Hero Subheading */}
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            transition={{ delay: 0.2 }}
+          >
+            <Typography variant="h6" sx={{ mb: 5, maxWidth: 700, mx: "auto" }}>
+              AI-powered resume & job description matching with actionable
+              insights to boost your chances.
+            </Typography>
+          </motion.div>
+
+          {/* CTA Button */}
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            transition={{ delay: 0.4 }}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button
+              variant="contained"
+              size="large"
+              sx={{ px: 5, py: 1.5, fontSize: "1rem" }}
+              onClick={() => setOpenAnalyze(true)}
+            >
+              Get Started
+            </Button>
           </motion.div>
         </Box>
       </Box>
@@ -216,8 +260,9 @@ const LandingPage = () => {
       <AnalyzeModal
         open={openAnalyze}
         onClose={() => setOpenAnalyze(false)}
-        onComplete={() => {
-          console.log("Redirect to dashboard later");
+        onComplete={(data) => {
+          console.log("Analysis data:", data);
+          navigate("/dashboard");
         }}
       />
     </>
