@@ -11,8 +11,11 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DescriptionIcon from "@mui/icons-material/Description";
 import InsightsIcon from "@mui/icons-material/Insights";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import AnalyzeModal from "../components/analyze/AnalyzeModal";
 
 const LandingPage = () => {
+  const [openAnalyze, setOpenAnalyze] = useState(false);
   return (
     <>
       {/* ================= HERO SECTION ================= */}
@@ -53,10 +56,7 @@ const LandingPage = () => {
               Match Your Resume with the Right Job
             </Typography>
 
-            <Typography
-              variant="h6"
-              sx={{ mb: 5, maxWidth: 700, mx: "auto" }}
-            >
+            <Typography variant="h6" sx={{ mb: 5, maxWidth: 700, mx: "auto" }}>
               AI-powered resume & job description matching with actionable
               insights to boost your chances.
             </Typography>
@@ -66,6 +66,7 @@ const LandingPage = () => {
                 variant="contained"
                 size="large"
                 sx={{ px: 5, py: 1.5, fontSize: "1rem" }}
+                onClick={() => setOpenAnalyze(true)}
               >
                 Get Started
               </Button>
@@ -210,6 +211,15 @@ const LandingPage = () => {
           </Grid>
         </Grid>
       </Container>
+
+      {/* ================= Analyzer Logic added  ================= */}
+      <AnalyzeModal
+        open={openAnalyze}
+        onClose={() => setOpenAnalyze(false)}
+        onComplete={() => {
+          console.log("Redirect to dashboard later");
+        }}
+      />
     </>
   );
 };
