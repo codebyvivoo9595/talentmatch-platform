@@ -7,7 +7,7 @@ const DashboardPage = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
       <Typography variant="h4" fontWeight="bold" gutterBottom>
-        Resume Match Dashboard
+        Talent Match Dashboard
       </Typography>
 
       <Typography color="text.secondary" sx={{ mb: 4 }}>
