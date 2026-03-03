@@ -1,4 +1,7 @@
 
+using Microsoft.EntityFrameworkCore;
+using TalentMatch.Api.Data;
+
 namespace TalentMatch.Api
 {
     public class Program
@@ -8,6 +11,11 @@ namespace TalentMatch.Api
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+
+            //Addd DbContext with SQL Server connection string from appsettings.json
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseSqlServer(
+            builder.Configuration.GetConnectionString("TalentMatchDbConnection")));
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
