@@ -1,6 +1,11 @@
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using TalentMatch.Api.Data;
+using TalentMatch.Api.Services;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
 
 namespace TalentMatch.Api
 {
@@ -11,6 +16,31 @@ namespace TalentMatch.Api
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+
+            //JWT Token Service for generating tokens on login and registration
+            builder.Services.AddScoped<JwtTokenService>();
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    var jwt = builder.Configuration.GetSection("Jwt");
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = jwt["Issuer"],
+                        ValidAudience = jwt["Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(jwt["Key"]!)
+                        )
+                    };
+                });
+
+            builder.Services.AddAuthorization();
+
+
 
             //Addd DbContext with SQL Server connection string from appsettings.json
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -33,7 +63,11 @@ namespace TalentMatch.Api
 
             app.UseHttpsRedirection();
 
+            app.UseRouting();
+            app.UseAuthentication();
             app.UseAuthorization();
+
+            //app.UseAuthorization();
 
 
             app.MapControllers();
