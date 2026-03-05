@@ -52,6 +52,12 @@ namespace TalentMatch.Api
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            //Added services for resume parsing, AI analysis, and score calculation. Also added HttpClient for AI analysis service to call external APIs.
+            builder.Services.AddScoped<ResumeParserService>();
+            builder.Services.AddScoped<AiAnalysisService>();
+            builder.Services.AddScoped<ScoreCalculationService>();
+            builder.Services.AddHttpClient<AiAnalysisService>();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
