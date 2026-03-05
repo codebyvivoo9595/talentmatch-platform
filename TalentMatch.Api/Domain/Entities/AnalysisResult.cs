@@ -17,5 +17,10 @@
         public string AiResponse { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public string ResumeText { get; set; } = string.Empty;
+        
+        public string JobDescription { get; set; } = string.Empty;
+
     }
 }
