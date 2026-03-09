@@ -16,6 +16,7 @@ namespace TalentMatch.Api.Controllers
         private readonly AiAnalysisService _aiService;
         private readonly ScoreCalculationService _scoreService;
         private readonly SuggestionService _suggestionService;
+        private readonly SkillGapService _skillGapService;
         private readonly ApplicationDbContext _context;
 
         public AnalyzeController(
@@ -23,12 +24,14 @@ namespace TalentMatch.Api.Controllers
             AiAnalysisService aiService,
             ScoreCalculationService scoreService,
             SuggestionService suggestionService,
+            SkillGapService skillGapService,
             ApplicationDbContext context)
         {
             _resumeParser = resumeParser;
             _aiService = aiService;
             _scoreService = scoreService;
             _suggestionService = suggestionService;
+            _skillGapService = skillGapService;
             _context = context;
         }
 
@@ -66,6 +69,10 @@ namespace TalentMatch.Api.Controllers
                 // Extract Suggestions from AI response using SuggestionService. This service takes the raw scores and feedback from the AI response and generates actionable suggestions for the candidate to improve their resume and better match the job description.
                 var suggestions = _suggestionService.ExtractSuggestions(aiResponse);
 
+                // Detect Missing Skills using SkillGapService. This service compares the skills listed in the job description with those mentioned in the resume and identifies any gaps or missing skills that the candidate should consider adding to their resume or acquiring to better fit the job requirements.
+                var missingSkills =
+                _skillGapService.DetectMissingSkills(jobDescription, aiResponse);
+
                 if (aiResponse == null)
                     return StatusCode(500, "AI analysis failed");
 
@@ -102,7 +109,8 @@ namespace TalentMatch.Api.Controllers
                     result.Id,
                     result.FinalPercentage,
                     aiResponse,
-                    suggestions
+                    suggestions,
+                    missingSkills
                 });
             }
             catch (Exception ex)

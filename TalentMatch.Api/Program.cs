@@ -74,6 +74,7 @@ namespace TalentMatch.Api
             builder.Services.AddScoped<AiAnalysisService>();
             builder.Services.AddScoped<ScoreCalculationService>();
             builder.Services.AddScoped<SuggestionService>();
+            builder.Services.AddScoped<SkillGapService>();
 
 
             var app = builder.Build();
