@@ -1,10 +1,11 @@
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Net.Http.Headers;
+using System.Text;
 using TalentMatch.Api.Data;
 using TalentMatch.Api.Services;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 
 namespace TalentMatch.Api
@@ -40,6 +41,12 @@ namespace TalentMatch.Api
 
             builder.Services.AddAuthorization();
 
+            //Configure HttpClient for AiAnalysisService to include Hugging Face API key in the Authorization header for all requests made by this service. This allows the service to authenticate with the Hugging Face API when calling it to analyze resumes against job descriptions.
+            builder.Services.AddHttpClient<AiAnalysisService>(client =>
+            {
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", "YOUR_HUGGINGFACE_API_KEY");
+            });
 
 
             //Addd DbContext with SQL Server connection string from appsettings.json

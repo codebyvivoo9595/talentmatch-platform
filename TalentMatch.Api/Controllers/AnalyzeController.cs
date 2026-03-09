@@ -43,7 +43,7 @@ namespace TalentMatch.Api.Controllers
                 if (string.IsNullOrWhiteSpace(jobDescription))
                     return BadRequest("Job description required");
 
-                // Extract Resume Text
+                // Extract Resume Text using ResumeParserService. This service uses a PDF parsing library to read the uploaded resume file and extract its text content for analysis by the AI service.
                 string resumeText;
 
                 using (var stream = resume.OpenReadStream())
@@ -57,7 +57,7 @@ namespace TalentMatch.Api.Controllers
                 if (aiResponse == null)
                     return StatusCode(500, "AI analysis failed");
 
-                // Calculate Score Percentages based on AI response
+                // Calculate Score Percentages based on AI response using ScoreCalculationService. This service takes the raw scores from the AI response and converts them into percentage values for easier interpretation and comparison.
                 var finalPercentage = _scoreService.Calculate(aiResponse);
 
                 // Get UserId from JWT claims to associate analysis result with user. This assumes the user is authenticated and the token contains the NameIdentifier claim with the user's ID.
@@ -73,11 +73,11 @@ namespace TalentMatch.Api.Controllers
                 {
                     Id = Guid.NewGuid(),
                     UserId = userId,
-                    SkillsScore = aiResponse.skills.score,
-                    TechStackScore = aiResponse.techStack.score,
-                    ProjectsScore = aiResponse.projects.score,
-                    ExperienceScore = aiResponse.experience.score,
-                    OverallScore = aiResponse.overall.score,
+                    SkillsScore = aiResponse.Skills.Score,
+                    TechStackScore = aiResponse.TechStack.Score,
+                    ProjectsScore = aiResponse.Projects.Score,
+                    ExperienceScore = aiResponse.Experience.Score,
+                    OverallScore = aiResponse.Overall.Score,
                     FinalPercentage = finalPercentage,
                     AiResponse = JsonSerializer.Serialize(aiResponse)
                 };

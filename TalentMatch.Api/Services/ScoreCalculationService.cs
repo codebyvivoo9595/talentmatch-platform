@@ -6,14 +6,14 @@ namespace TalentMatch.Api.Services
     {
         public double Calculate(AiEvaluationResponse ai)
         {
+            if (ai == null) return 0;
+
             return
-                (ai.skills.score / 5.0) * 30 +
-                (ai.techStack.score / 5.0) * 30 +
-                (ai.projects.score / 5.0) * 20 +
-                (ai.experience.score / 5.0) * 10 +
-                (ai.overall.score / 5.0) * 10;
+                ((ai.Skills?.Score ?? 0) / 5.0) * 30 +
+                ((ai.TechStack?.Score ?? 0) / 5.0) * 30 +
+                ((ai.Projects?.Score ?? 0) / 5.0) * 20 +
+                ((ai.Experience?.Score ?? 0) / 5.0) * 10 +
+                ((ai.Overall?.Score ?? 0) / 5.0) * 10;
         }
     }
-
 }
-

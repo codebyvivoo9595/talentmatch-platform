@@ -1,17 +1,29 @@
-﻿namespace TalentMatch.Api.Models
+﻿using System.Text.Json.Serialization;
+
+namespace TalentMatch.Api.Models
 {
     public class ScoreDetail
     {
-        public int score { get; set; }
-        public string reason { get; set; }
+        public int Score { get; set; }
+
+        public string Reason { get; set; } = "";
     }
 
     public class AiEvaluationResponse
     {
-        public ScoreDetail skills { get; set; }
-        public ScoreDetail techStack { get; set; }
-        public ScoreDetail projects { get; set; }
-        public ScoreDetail experience { get; set; }
-        public ScoreDetail overall { get; set; }
+        [JsonPropertyName("skills")]
+        public ScoreDetail Skills { get; set; } = new();
+
+        [JsonPropertyName("techStack")]
+        public ScoreDetail TechStack { get; set; } = new();
+
+        [JsonPropertyName("projects")]
+        public ScoreDetail Projects { get; set; } = new();
+
+        [JsonPropertyName("experience")]
+        public ScoreDetail Experience { get; set; } = new();
+
+        [JsonPropertyName("overall")]
+        public ScoreDetail Overall { get; set; } = new();
     }
 }
