@@ -1,21 +1,17 @@
-﻿
-    namespace TalentMatch.Api.Models
+﻿namespace TalentMatch.Api.Models
+{
+    public class ScoreDetail
     {
-        public class AiEvaluationResponse
-        {
-            public Category skills { get; set; } = new();
-            public Category techStack { get; set; } = new();
-            public Category projects { get; set; } = new();
-            public Category experience { get; set; } = new();
-            public Category overall { get; set; } = new();
-        }
-
-        public class Category
-        {
-            public int score { get; set; }
-            public string reason { get; set; } = "";
-            public List<string> suggestions { get; set; } = new();
-        }
+        public int score { get; set; }
+        public string reason { get; set; }
     }
 
-
+    public class AiEvaluationResponse
+    {
+        public ScoreDetail skills { get; set; }
+        public ScoreDetail techStack { get; set; }
+        public ScoreDetail projects { get; set; }
+        public ScoreDetail experience { get; set; }
+        public ScoreDetail overall { get; set; }
+    }
+}
