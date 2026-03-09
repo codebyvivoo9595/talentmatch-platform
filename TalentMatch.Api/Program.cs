@@ -73,7 +73,8 @@ namespace TalentMatch.Api
             builder.Services.AddScoped<ResumeParserService>();
             builder.Services.AddScoped<AiAnalysisService>();
             builder.Services.AddScoped<ScoreCalculationService>();
-           
+            builder.Services.AddScoped<SuggestionService>();
+
 
             var app = builder.Build();
 

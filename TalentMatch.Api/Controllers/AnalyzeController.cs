@@ -15,17 +15,20 @@ namespace TalentMatch.Api.Controllers
         private readonly ResumeParserService _resumeParser;
         private readonly AiAnalysisService _aiService;
         private readonly ScoreCalculationService _scoreService;
+        private readonly SuggestionService _suggestionService;
         private readonly ApplicationDbContext _context;
 
         public AnalyzeController(
             ResumeParserService resumeParser,
             AiAnalysisService aiService,
             ScoreCalculationService scoreService,
+            SuggestionService suggestionService,
             ApplicationDbContext context)
         {
             _resumeParser = resumeParser;
             _aiService = aiService;
             _scoreService = scoreService;
+            _suggestionService = suggestionService;
             _context = context;
         }
 
@@ -40,6 +43,12 @@ namespace TalentMatch.Api.Controllers
                 if (resume == null || resume.Length == 0)
                     return BadRequest("Resume file required");
 
+                if (!resume.FileName.EndsWith(".pdf"))
+                    return BadRequest("Only PDF resumes are supported");
+
+                if (resume.Length > 5 * 1024 * 1024)
+                    return BadRequest("Resume file must be under 5MB");
+
                 if (string.IsNullOrWhiteSpace(jobDescription))
                     return BadRequest("Job description required");
 
@@ -53,6 +62,9 @@ namespace TalentMatch.Api.Controllers
 
                 // Call AI Service to analyze resume against job description and get scores
                 var aiResponse = await _aiService.AnalyzeAsync(resumeText, jobDescription);
+
+                // Extract Suggestions from AI response using SuggestionService. This service takes the raw scores and feedback from the AI response and generates actionable suggestions for the candidate to improve their resume and better match the job description.
+                var suggestions = _suggestionService.ExtractSuggestions(aiResponse);
 
                 if (aiResponse == null)
                     return StatusCode(500, "AI analysis failed");
@@ -89,7 +101,8 @@ namespace TalentMatch.Api.Controllers
                 {
                     result.Id,
                     result.FinalPercentage,
-                    aiResponse
+                    aiResponse,
+                    suggestions
                 });
             }
             catch (Exception ex)
