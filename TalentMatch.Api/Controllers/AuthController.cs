@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TalentMatch.Api.Data;
+using TalentMatch.Api.Domain.Entities;
 using TalentMatch.Api.DTOs.Auth;
-using TalentMatch.Api.Models;
 using TalentMatch.Api.Services;
 
 namespace TalentMatch.Api.Controllers

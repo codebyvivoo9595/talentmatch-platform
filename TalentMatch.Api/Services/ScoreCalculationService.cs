@@ -1,29 +1,19 @@
-﻿namespace TalentMatch.Api.Services
+﻿using TalentMatch.Api.Models;
+
+namespace TalentMatch.Api.Services
 {
     public class ScoreCalculationService
     {
-        public double CalculateFinalScore(
-            int skills,
-            int techStack,
-            int projects,
-            int experience,
-            int overall)
+        public double Calculate(AiEvaluationResponse ai)
         {
-            double skillsWeight = 0.30;
-            double techWeight = 0.30;
-            double projectWeight = 0.20;
-            double expWeight = 0.10;
-            double overallWeight = 0.10;
+            if (ai == null) return 0;
 
-            var finalScore =
-                ((skills / 5.0) * skillsWeight) +
-                ((techStack / 5.0) * techWeight) +
-                ((projects / 5.0) * projectWeight) +
-                ((experience / 5.0) * expWeight) +
-                ((overall / 5.0) * overallWeight);
-
-            return finalScore * 100;
+            return
+                ((ai.Skills?.Score ?? 0) / 5.0) * 30 +
+                ((ai.TechStack?.Score ?? 0) / 5.0) * 30 +
+                ((ai.Projects?.Score ?? 0) / 5.0) * 20 +
+                ((ai.Experience?.Score ?? 0) / 5.0) * 10 +
+                ((ai.Overall?.Score ?? 0) / 5.0) * 10;
         }
     }
 }
-

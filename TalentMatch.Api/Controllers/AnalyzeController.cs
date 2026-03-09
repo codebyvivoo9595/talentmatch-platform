@@ -1,10 +1,7 @@
-﻿
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TalentMatch.Api.Services;
-using TalentMatch.Api.Models;
 using TalentMatch.Api.Domain.Entities;
-using TalentMatch.Api.Infrastructure;
 using System.Security.Claims;
 using System.Text.Json;
 using TalentMatch.Api.Data;
@@ -17,79 +14,109 @@ namespace TalentMatch.Api.Controllers
     {
         private readonly ResumeParserService _resumeParser;
         private readonly AiAnalysisService _aiService;
+        private readonly ScoreCalculationService _scoreService;
+        private readonly SuggestionService _suggestionService;
+        private readonly SkillGapService _skillGapService;
         private readonly ApplicationDbContext _context;
-        private readonly AiEvaluationResponse _aiResponse;
 
         public AnalyzeController(
             ResumeParserService resumeParser,
             AiAnalysisService aiService,
-            ApplicationDbContext context,
-            AiEvaluationResponse aiResponse)
+            ScoreCalculationService scoreService,
+            SuggestionService suggestionService,
+            SkillGapService skillGapService,
+            ApplicationDbContext context)
         {
             _resumeParser = resumeParser;
             _aiService = aiService;
+            _scoreService = scoreService;
+            _suggestionService = suggestionService;
+            _skillGapService = skillGapService;
             _context = context;
-            _aiResponse = aiResponse;
         }
 
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> Analyze(
-            IFormFile resume,
+            [FromForm] IFormFile resume,
             [FromForm] string jobDescription)
         {
-            if (resume == null || resume.Length == 0)
-                return BadRequest("Resume file required");
-
-            if (string.IsNullOrWhiteSpace(jobDescription))
-                return BadRequest("Job description required");
-
-            // 1️⃣ Extract Resume Text
-            string resumeText;
-
-            using (var stream = resume.OpenReadStream())
+            try
             {
-                resumeText = _resumeParser.ExtractTextFromPdf(stream);
+                if (resume == null || resume.Length == 0)
+                    return BadRequest("Resume file required");
+
+                if (!resume.FileName.EndsWith(".pdf"))
+                    return BadRequest("Only PDF resumes are supported");
+
+                if (resume.Length > 5 * 1024 * 1024)
+                    return BadRequest("Resume file must be under 5MB");
+
+                if (string.IsNullOrWhiteSpace(jobDescription))
+                    return BadRequest("Job description required");
+
+                // Extract Resume Text using ResumeParserService. This service uses a PDF parsing library to read the uploaded resume file and extract its text content for analysis by the AI service.
+                string resumeText;
+
+                using (var stream = resume.OpenReadStream())
+                {
+                    resumeText = _resumeParser.ExtractTextFromPdf(stream);
+                }
+
+                // Call AI Service to analyze resume against job description and get scores
+                var aiResponse = await _aiService.AnalyzeAsync(resumeText, jobDescription);
+
+                // Extract Suggestions from AI response using SuggestionService. This service takes the raw scores and feedback from the AI response and generates actionable suggestions for the candidate to improve their resume and better match the job description.
+                var suggestions = _suggestionService.ExtractSuggestions(aiResponse);
+
+                // Detect Missing Skills using SkillGapService. This service compares the skills listed in the job description with those mentioned in the resume and identifies any gaps or missing skills that the candidate should consider adding to their resume or acquiring to better fit the job requirements.
+                var missingSkills =
+                _skillGapService.DetectMissingSkills(jobDescription, aiResponse);
+
+                if (aiResponse == null)
+                    return StatusCode(500, "AI analysis failed");
+
+                // Calculate Score Percentages based on AI response using ScoreCalculationService. This service takes the raw scores from the AI response and converts them into percentage values for easier interpretation and comparison.
+                var finalPercentage = _scoreService.Calculate(aiResponse);
+
+                // Get UserId from JWT claims to associate analysis result with user. This assumes the user is authenticated and the token contains the NameIdentifier claim with the user's ID.
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (userIdClaim == null)
+                    return Unauthorized();
+
+                var userId = Guid.Parse(userIdClaim);
+
+                // Save Result to Database
+                var result = new AnalysisResult
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    SkillsScore = aiResponse.Skills.Score,
+                    TechStackScore = aiResponse.TechStack.Score,
+                    ProjectsScore = aiResponse.Projects.Score,
+                    ExperienceScore = aiResponse.Experience.Score,
+                    OverallScore = aiResponse.Overall.Score,
+                    FinalPercentage = finalPercentage,
+                    AiResponse = JsonSerializer.Serialize(aiResponse)
+                };
+
+                _context.AnalysisResults.Add(result);
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    result.Id,
+                    result.FinalPercentage,
+                    aiResponse,
+                    suggestions,
+                    missingSkills
+                });
             }
-
-            // 2️⃣ Call AI Service
-            var aiResponse = await _aiService.AnalyzeAsync(resumeText, jobDescription);
-
-            // 3️⃣ Calculate Weighted Score
-            double finalPercentage =
-                (aiResponse.skills.score / 5.0) * 30 +
-                (aiResponse.techStack.score / 5.0) * 30 +
-                (aiResponse.projects.score / 5.0) * 20 +
-                (aiResponse.experience.score / 5.0) * 10 +
-                (aiResponse.overall.score / 5.0) * 10;
-
-            // 4️⃣ Get UserId from JWT
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-            // 5️⃣ Save Result
-            var result = new AnalysisResult
+            catch (Exception ex)
             {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                SkillsScore = aiResponse.skills.score,
-                TechStackScore = aiResponse.techStack.score,
-                ProjectsScore = aiResponse.projects.score,
-                ExperienceScore = aiResponse.experience.score,
-                OverallScore = aiResponse.overall.score,
-                FinalPercentage = finalPercentage,
-                AiResponse = JsonSerializer.Serialize(aiResponse)
-            };
-
-            _context.AnalysisResults.Add(result);
-            await _context.SaveChangesAsync();
-
-            // 6️⃣ Return response
-            return Ok(new
-            {
-                result.Id,
-                result.FinalPercentage,
-                aiResponse
-            });
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }

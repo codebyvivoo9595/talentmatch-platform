@@ -1,21 +1,29 @@
-﻿
-    namespace TalentMatch.Api.Models
-    {
-        public class AiEvaluationResponse
-        {
-            public Category skills { get; set; } = new();
-            public Category techStack { get; set; } = new();
-            public Category projects { get; set; } = new();
-            public Category experience { get; set; } = new();
-            public Category overall { get; set; } = new();
-        }
+﻿using System.Text.Json.Serialization;
 
-        public class Category
-        {
-            public int score { get; set; }
-            public string reason { get; set; } = "";
-            public List<string> suggestions { get; set; } = new();
-        }
+namespace TalentMatch.Api.Models
+{
+    public class ScoreDetail
+    {
+        public int Score { get; set; }
+
+        public string Reason { get; set; } = "";
     }
 
+    public class AiEvaluationResponse
+    {
+        [JsonPropertyName("skills")]
+        public ScoreDetail Skills { get; set; } = new();
 
+        [JsonPropertyName("techStack")]
+        public ScoreDetail TechStack { get; set; } = new();
+
+        [JsonPropertyName("projects")]
+        public ScoreDetail Projects { get; set; } = new();
+
+        [JsonPropertyName("experience")]
+        public ScoreDetail Experience { get; set; } = new();
+
+        [JsonPropertyName("overall")]
+        public ScoreDetail Overall { get; set; } = new();
+    }
+}

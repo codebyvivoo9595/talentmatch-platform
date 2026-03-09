@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TalentMatch.Api.Domain.Entities;
-using TalentMatch.Api.Models;
-using User = TalentMatch.Api.Models.User;
+using User = TalentMatch.Api.Domain.Entities.User;
 
 namespace TalentMatch.Api.Data
 {
