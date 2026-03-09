@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TalentMatch.Api.Models
+namespace TalentMatch.Api.Domain.Entities
 {
     public class User
     {
