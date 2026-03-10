@@ -7,6 +7,7 @@ using System.Text;
 using TalentMatch.Api.Data;
 using TalentMatch.Api.Models;
 using TalentMatch.Api.Services;
+using Microsoft.OpenApi.Models;
 
 
 namespace TalentMatch.Api
@@ -28,8 +29,8 @@ namespace TalentMatch.Api
                     var jwt = builder.Configuration.GetSection("Jwt");
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
                         ValidIssuer = jwt["Issuer"],
@@ -56,6 +57,42 @@ namespace TalentMatch.Api
             builder.Services.AddHttpClient<AiAnalysisService>(client =>
             {
                 client.Timeout = TimeSpan.FromSeconds(60);
+            });
+
+            //Added swagger token recieve option.
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "TalentMatch API",
+                    Version = "v1"
+                });
+
+                // JWT Authentication configuration for JWT Token addition here
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "Enter JWT token like: Bearer {your token}"
+                });
+
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] {}
+                }
+            });
             });
 
 
@@ -91,8 +128,6 @@ namespace TalentMatch.Api
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
-
-            //app.UseAuthorization();
 
 
             app.MapControllers();
