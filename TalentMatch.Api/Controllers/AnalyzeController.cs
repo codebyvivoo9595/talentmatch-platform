@@ -37,7 +37,7 @@ namespace TalentMatch.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> Analyze(
            [FromForm] AnalyzeRequest request)
         {
