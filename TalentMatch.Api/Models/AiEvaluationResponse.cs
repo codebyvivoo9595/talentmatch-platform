@@ -25,5 +25,7 @@ namespace TalentMatch.Api.Models
 
         [JsonPropertyName("overall")]
         public ScoreDetail Overall { get; set; } = new();
+
+        public List<string> MissingSkills { get; set; } = new();
     }
 }

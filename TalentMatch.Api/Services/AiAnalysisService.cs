@@ -81,20 +81,39 @@ CATEGORIES
 5. Overall Fit
 
 --------------------------------
+MISSING SKILLS RULES
+--------------------------------
+- Identify skills present in Job Description but missing in Resume
+- Only include TECHNICAL skills (no soft skills)
+- Avoid duplicates
+- Maximum 6 skills
+- Use clean names (e.g., ""React"", ""Docker"", ""AWS"")
+- If no missing skills, return empty array []
+
+--------------------------------
 OUTPUT RULES
 --------------------------------
-Return ONLY JSON.
+Return ONLY valid JSON.
+Do NOT add any explanation outside JSON.
+
 Each reason must contain EXACTLY 4 lines separated by \n.
 
+--------------------------------
 JSON FORMAT
+--------------------------------
 
 {{
  ""skills"": {{ ""score"": number, ""reason"": ""line1\nline2\nline3\nline4"" }},
  ""techStack"": {{ ""score"": number, ""reason"": ""line1\nline2\nline3\nline4"" }},
  ""projects"": {{ ""score"": number, ""reason"": ""line1\nline2\nline3\nline4"" }},
  ""experience"": {{ ""score"": number, ""reason"": ""line1\nline2\nline3\nline4"" }},
- ""overall"": {{ ""score"": number, ""reason"": ""line1\nline2\nline3\nline4"" }}
+ ""overall"": {{ ""score"": number, ""reason"": ""line1\nline2\nline3\nline4"" }},
+ ""missingSkills"": [""skill1"", ""skill2"", ""skill3""]
 }}
+
+--------------------------------
+INPUT
+--------------------------------
 
 Resume:
 {resumeText}
@@ -135,6 +154,10 @@ Job Description:
             );
 
             var response = await _httpClient.SendAsync(request);
+
+            var log = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("RAW RESPONSE:");
+            Console.WriteLine(log);
 
             if (!response.IsSuccessStatusCode)
                 throw new Exception("AI API call failed");
