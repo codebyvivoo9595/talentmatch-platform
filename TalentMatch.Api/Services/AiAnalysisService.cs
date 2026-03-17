@@ -25,122 +25,23 @@ namespace TalentMatch.Api.Services
             if (string.IsNullOrWhiteSpace(jobDescription))
                 throw new Exception("Job description cannot be empty");
 
-            var prompt = $@"
+            var prompt = BuildPrompt(resumeText, jobDescription);
 
-You are an experienced technical recruiter reviewing a candidate's resume.
-
-Your task is to evaluate how well the resume matches the job description.
-
---------------------------------
-SCORING RULES
---------------------------------
-
-Each category must be scored from 0 to 5.
-
-0 = No match
-1 = Very weak match
-2 = Weak match
-3 = Moderate match
-4 = Strong match
-5 = Perfect match
-
---------------------------------
-EVALUATION CATEGORIES
---------------------------------
-
-1. Skills Match
-Compare candidate skills with the job requirements.
-
-2. Tech Stack Match
-Evaluate if the candidate's technologies match the job stack.
-
-3. Projects Relevance
-Check how relevant the candidate's projects are to the role.
-
-4. Experience Level
-Evaluate years and relevance of experience.
-
-5. Overall Fit
-General suitability for the role.
-
---------------------------------
-EDGE CASE HANDLING
---------------------------------
-
-If the resume text is empty, extremely short, irrelevant, or poorly formatted:
-- Give low scores
-- Provide helpful improvement suggestions
-
-If the job description is unclear or missing:
-- Evaluate based on general resume quality
-- Mention that job requirements were unclear
-
-If resume and job description are unrelated:
-- Score appropriately
-- Politely mention the mismatch
-
---------------------------------
-STYLE RULES
---------------------------------
-
-Suggestions must be:
-- Friendly
-- Supportive
-- Constructive
-- Light humor allowed but never insulting
-
---------------------------------
-STRICT OUTPUT RULES
---------------------------------
-
-1. Return ONLY valid JSON
-2. Do NOT add text outside JSON
-3. Follow the exact JSON structure
-4. Each reason must contain EXACTLY 4 lines
-5. Each line must be separated using \\n
-
-Example:
-
-""reason"": ""Line 1 explanation.\nLine 2 explanation.\nLine 3 explanation.\nLine 4 suggestion.""
-
---------------------------------
-REQUIRED JSON FORMAT
---------------------------------
-
-{{
-  ""skills"": {{ ""score"": number, ""reason"": ""4 lines explanation separated by \\n"" }},
-  ""techStack"": {{ ""score"": number, ""reason"": ""4 lines explanation separated by \\n"" }},
-  ""projects"": {{ ""score"": number, ""reason"": ""4 lines explanation separated by \\n"" }},
-  ""experience"": {{ ""score"": number, ""reason"": ""4 lines explanation separated by \\n"" }},
-  ""overall"": {{ ""score"": number, ""reason"": ""4 lines explanation separated by \\n"" }}
-}}
-
---------------------------------
-INPUT DATA
---------------------------------
-
-Resume:
-{resumeText}
-
-Job Description:
-{jobDescription}
-";
-
-            var aiRawResponse = await CallAiModel(prompt);
+            var aiContent = await CallAiModel(prompt);
 
             try
             {
-                var hfResponse = JsonSerializer.Deserialize<List<HuggingFaceResponse>>(aiRawResponse);
+                var cleanedJson = ExtractJson(aiContent);
 
-                var generatedText = hfResponse?.FirstOrDefault()?.generated_text;
-
-                if (string.IsNullOrWhiteSpace(generatedText))
-                    throw new Exception("AI returned empty response");
-
-                var result = JsonSerializer.Deserialize<AiEvaluationResponse>(generatedText);
+                var result = JsonSerializer.Deserialize<AiEvaluationResponse>(
+                    cleanedJson,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
 
                 if (result == null)
-                    throw new Exception("AI response parsing failed");
+                    throw new Exception("AI parsing failed");
 
                 return result;
             }
@@ -150,31 +51,140 @@ Job Description:
             }
         }
 
+        private string BuildPrompt(string resumeText, string jobDescription)
+        {
+            return $@"
+
+You are an experienced technical recruiter reviewing a candidate's resume.
+
+Evaluate how well the resume matches the job description.
+
+--------------------------------
+SCORING RULES
+--------------------------------
+Score each category from 0 to 5.
+
+0 = No match
+1 = Very weak
+2 = Weak
+3 = Moderate
+4 = Strong
+5 = Perfect
+
+--------------------------------
+CATEGORIES
+--------------------------------
+1. Skills
+2. Tech Stack
+3. Projects
+4. Experience
+5. Overall Fit
+
+--------------------------------
+MISSING SKILLS RULES
+--------------------------------
+- Identify skills present in Job Description but missing in Resume
+- Only include TECHNICAL skills (no soft skills)
+- Avoid duplicates
+- Maximum 6 skills
+- Use clean names (e.g., ""React"", ""Docker"", ""AWS"")
+- If no missing skills, return empty array []
+
+--------------------------------
+OUTPUT RULES
+--------------------------------
+Return ONLY valid JSON.
+Do NOT add any explanation outside JSON.
+
+Each reason must contain EXACTLY 4 lines separated by \n.
+
+--------------------------------
+JSON FORMAT
+--------------------------------
+
+{{
+ ""skills"": {{ ""score"": number, ""reason"": ""line1\nline2\nline3\nline4"" }},
+ ""techStack"": {{ ""score"": number, ""reason"": ""line1\nline2\nline3\nline4"" }},
+ ""projects"": {{ ""score"": number, ""reason"": ""line1\nline2\nline3\nline4"" }},
+ ""experience"": {{ ""score"": number, ""reason"": ""line1\nline2\nline3\nline4"" }},
+ ""overall"": {{ ""score"": number, ""reason"": ""line1\nline2\nline3\nline4"" }},
+ ""missingSkills"": [""skill1"", ""skill2"", ""skill3""]
+}}
+
+--------------------------------
+INPUT
+--------------------------------
+
+Resume:
+{resumeText}
+
+Job Description:
+{jobDescription}
+";
+        }
+
         private async Task<string> CallAiModel(string prompt)
         {
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", _settings.HuggingFaceKey);
-
             var requestBody = new
             {
-                inputs = prompt
+                model = _settings.Model,
+                messages = new[]
+                {
+                    new
+                    {
+                        role = "user",
+                        content = prompt
+                    }
+                },
+                temperature = 0.2
             };
 
-            var content = new StringContent(
+            var request = new HttpRequestMessage(HttpMethod.Post, _settings.Endpoint);
+
+            request.Headers.Authorization =
+                new AuthenticationHeaderValue("Bearer", _settings.ApiKey);
+
+            request.Headers.Add("HTTP-Referer", "http://localhost");
+            request.Headers.Add("X-Title", "TalentMatchAI");
+
+            request.Content = new StringContent(
                 JsonSerializer.Serialize(requestBody),
                 Encoding.UTF8,
                 "application/json"
             );
 
-            var response = await _httpClient.PostAsync(
-                "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
-                content
-            );
+            var response = await _httpClient.SendAsync(request);
+
+            var log = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("RAW RESPONSE:");
+            Console.WriteLine(log);
 
             if (!response.IsSuccessStatusCode)
                 throw new Exception("AI API call failed");
 
-            return await response.Content.ReadAsStringAsync();
+            var raw = await response.Content.ReadAsStringAsync();
+
+            using var doc = JsonDocument.Parse(raw);
+
+            var content =
+                doc.RootElement
+                   .GetProperty("choices")[0]
+                   .GetProperty("message")
+                   .GetProperty("content")
+                   .GetString();
+
+            return content ?? "";
+        }
+
+        private string ExtractJson(string text)
+        {
+            var start = text.IndexOf('{');
+            var end = text.LastIndexOf('}');
+
+            if (start == -1 || end == -1)
+                throw new Exception("JSON not found in AI response");
+
+            return text.Substring(start, end - start + 1);
         }
 
         private AiEvaluationResponse GetFallbackResponse()
@@ -184,34 +194,29 @@ Job Description:
                 Skills = new ScoreDetail
                 {
                     Score = 0,
-                    Reason = "AI response invalid\nPlease retry the analysis\nModel formatting issue\nTry again later"
+                    Reason = "AI response invalid\nParsing failed\nTry running analysis again\nCheck resume formatting"
                 },
                 TechStack = new ScoreDetail
                 {
                     Score = 0,
-                    Reason = "AI response invalid\nPlease retry the analysis\nModel formatting issue\nTry again later"
+                    Reason = "AI response invalid\nParsing failed\nTry running analysis again\nCheck resume formatting"
                 },
                 Projects = new ScoreDetail
                 {
                     Score = 0,
-                    Reason = "AI response invalid\nPlease retry the analysis\nModel formatting issue\nTry again later"
+                    Reason = "AI response invalid\nParsing failed\nTry running analysis again\nCheck resume formatting"
                 },
                 Experience = new ScoreDetail
                 {
                     Score = 0,
-                    Reason = "AI response invalid\nPlease retry the analysis\nModel formatting issue\nTry again later"
+                    Reason = "AI response invalid\nParsing failed\nTry running analysis again\nCheck resume formatting"
                 },
                 Overall = new ScoreDetail
                 {
                     Score = 0,
-                    Reason = "AI response invalid\nPlease retry the analysis\nModel formatting issue\nTry again later"
+                    Reason = "AI response invalid\nParsing failed\nTry running analysis again\nCheck resume formatting"
                 }
             };
         }
-    }
-
-    public class HuggingFaceResponse
-    {
-        public string generated_text { get; set; }
     }
 }
