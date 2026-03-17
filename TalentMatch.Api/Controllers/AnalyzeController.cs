@@ -37,7 +37,7 @@ namespace TalentMatch.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> Analyze(
            [FromForm] AnalyzeRequest request)
         {
@@ -70,8 +70,10 @@ namespace TalentMatch.Api.Controllers
                 var suggestions = _suggestionService.ExtractSuggestions(aiResponse);
 
                 // Detect Missing Skills using SkillGapService. This service compares the skills listed in the job description with those mentioned in the resume and identifies any gaps or missing skills that the candidate should consider adding to their resume or acquiring to better fit the job requirements.
-                var missingSkills =
-                _skillGapService.DetectMissingSkills(request.JobDescription, aiResponse);
+                //var missingSkills =
+                //_skillGapService.DetectMissingSkills(request.JobDescription, aiResponse);
+                //We will get Missing Skill directly from promt
+                var missingSkills = aiResponse.MissingSkills ?? new List<string>();
 
                 if (aiResponse == null)
                     return StatusCode(500, "AI analysis failed");
@@ -98,7 +100,8 @@ namespace TalentMatch.Api.Controllers
                     ExperienceScore = aiResponse.Experience.Score,
                     OverallScore = aiResponse.Overall.Score,
                     FinalPercentage = finalPercentage,
-                    AiResponse = JsonSerializer.Serialize(aiResponse)
+                    AiResponse = JsonSerializer.Serialize(aiResponse),
+                    MissingSkills = JsonSerializer.Serialize(aiResponse.MissingSkills)
                 };
 
                 _context.AnalysisResults.Add(result);
@@ -110,7 +113,7 @@ namespace TalentMatch.Api.Controllers
                     result.FinalPercentage,
                     aiResponse,
                     suggestions,
-                    missingSkills
+                    missingSkills,
                 });
             }
             catch (Exception ex)
