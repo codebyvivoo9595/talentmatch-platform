@@ -10,7 +10,8 @@ using TalentMatch.Api.Services;
 namespace TalentMatch.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class AnalyzeController : ControllerBase
     {
         private readonly ResumeParserService _resumeParser;
@@ -19,6 +20,8 @@ namespace TalentMatch.Api.Controllers
         private readonly SuggestionService _suggestionService;
         private readonly SkillGapService _skillGapService;
         private readonly ApplicationDbContext _context;
+        private readonly InputSanitizationService _sanitizer;
+        private readonly ILogger<AnalyzeController> _logger;
 
         public AnalyzeController(
             ResumeParserService resumeParser,
@@ -26,7 +29,9 @@ namespace TalentMatch.Api.Controllers
             ScoreCalculationService scoreService,
             SuggestionService suggestionService,
             SkillGapService skillGapService,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            InputSanitizationService sanitizer,
+            ILogger<AnalyzeController> logger)
         {
             _resumeParser = resumeParser;
             _aiService = aiService;
@@ -34,10 +39,12 @@ namespace TalentMatch.Api.Controllers
             _suggestionService = suggestionService;
             _skillGapService = skillGapService;
             _context = context;
+            _sanitizer = sanitizer;
+            _logger = logger;
         }
 
         [HttpPost]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> Analyze(
            [FromForm] AnalyzeRequest request)
         {
@@ -55,6 +62,15 @@ namespace TalentMatch.Api.Controllers
                 if (string.IsNullOrWhiteSpace(request.JobDescription))
                     return BadRequest("Job description required");
 
+                // Sanitize job description input
+                var jdSanitization = _sanitizer.SanitizeJobDescription(request.JobDescription);
+                if (!jdSanitization.IsValid)
+                {
+                    _logger.LogWarning("JD sanitization failed: {Error}", jdSanitization.ErrorMessage);
+                    return BadRequest(jdSanitization.ErrorMessage);
+                }
+                var sanitizedJd = jdSanitization.SanitizedValue;
+
                 // Extract Resume Text using ResumeParserService. This service uses a PDF parsing library to read the uploaded resume file and extract its text content for analysis by the AI service.
                 string resumeText;
 
@@ -64,7 +80,7 @@ namespace TalentMatch.Api.Controllers
                 }
 
                 // Call AI Service to analyze resume against job description and get scores
-                var aiResponse = await _aiService.AnalyzeAsync(resumeText, request.JobDescription);
+                var aiResponse = await _aiService.AnalyzeAsync(resumeText, sanitizedJd);
 
                 // Extract Suggestions from AI response using SuggestionService. This service takes the raw scores and feedback from the AI response and generates actionable suggestions for the candidate to improve their resume and better match the job description.
                 var suggestions = _suggestionService.ExtractSuggestions(aiResponse);
