@@ -1,0 +1,20 @@
+# =====================
+# .NET / ASP.NET Core
+# =====================
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Logs
+*.log
+
+# Secrets
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.local.json
+*.pfx
+*.pem
