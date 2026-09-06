@@ -8,7 +8,8 @@ using TalentMatch.Api.Services;
 namespace TalentMatch.Api.Controllers
 {
     [ApiController]
-    [Route("api/auth")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/auth")]
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext _db;

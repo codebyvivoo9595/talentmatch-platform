@@ -73,6 +73,35 @@ namespace TalentMatch.Api.Migrations
                     b.ToTable("AnalysisResults");
                 });
 
+            modelBuilder.Entity("TalentMatch.Api.Domain.Entities.GuestUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime>("LastUsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UsageCount")
+                        .HasDefaultValue(0)
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("GuestUsers");
+                });
+
             modelBuilder.Entity("TalentMatch.Api.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
