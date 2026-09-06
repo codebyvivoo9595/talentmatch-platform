@@ -13,14 +13,12 @@ import InsightsIcon from "@mui/icons-material/Insights";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import AnalyzeModal from "../components/analyze/AnalyzeModal";
-import { useNavigate } from "react-router-dom";
 import { fadeUp } from "../animations/motionVariants";
 import PrimaryButton from "../components/common/PrimaryButton";
 
 
 const LandingPage = () => {
   const [openAnalyze, setOpenAnalyze] = useState(false);
-  const navigate = useNavigate();
   return (
     <>
       {/* ================= HERO SECTION ================= */}
@@ -234,10 +232,6 @@ const LandingPage = () => {
       <AnalyzeModal
         open={openAnalyze}
         onClose={() => setOpenAnalyze(false)}
-        onComplete={(data) => {
-          console.log("Analysis data:", data);
-          navigate("/dashboard");
-        }}
       />
     </>
   );
